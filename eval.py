@@ -1,27 +1,27 @@
 import tlsh
-import floret
+import difflib
+# import floret
 import numpy as np
 import random
 from string import ascii_letters, digits
 
 
-def tlsh_change_per_position(sign, mod_sign):
-    hash = tlsh.hash(bytes(sign, 'utf8'))
-    mod_hash = tlsh.hash(bytes(mod_sign, 'utf8'))
+def tlsh_change_per_pos(sign, mod_sign):
+    shash = tlsh.hash(bytes(sign, 'utf8'))
+    mod_shash = tlsh.hash(bytes(mod_sign, 'utf8'))
 
-    A = set(sign)
-    B = set(mod_sign)
-    diff = A.symmetric_difference(B)
+    change_list = [li for li in difflib.ndiff(sign, mod_sign) if li[0] != ' ']
+    diff = len(change_list)
 
-    hA = set(hash)
-    hB = set(mod_hash)
-    hash_diff = hA.symmetric_difference(hB)
+    hash_change_list = [li for li in difflib.ndiff(
+        shash, mod_shash) if li[0] != ' ']
+    hash_diff = len(hash_change_list)
 
-    ratio = (float)(len(hash_diff)/len(diff))
+    ratio = (float)(hash_diff/(diff + 0.001))
     return ratio
 
 
-def ft_change_per_pos(sign, mod_sign):
+# def ft_change_per_pos(sign, mod_sign):
     vec = model.get_word_vector(sign)
     mod_vec = model.get_word_vector(mod_sign)
     vec_diff1D = np.setdiff1d(vec, mod_vec)
@@ -32,7 +32,7 @@ def ft_change_per_pos(sign, mod_sign):
 
 
 def rand_change(sign):
-    rlen = random.randrange(0, len(sign)-1)
+    rlen = random.randrange(1, len(sign)-1)
     mod_sign = sign
     for _ in range(rlen):
         pos = random.randrange(0, len(mod_sign))
@@ -45,14 +45,27 @@ def rand_change(sign):
 if __name__ == "__main__":
     filename = "p0f1.log"
     # train vectors for floret
-model = floret.train_unsupervised(
-    filename,
-    model="cbow",
-    mode="floret",
-    hashCount=2,
-    bucket=50000,
-    minn=3,
-    maxn=6,
-)
+# model = floret.train_unsupervised(
+#    filename,
+#    model="cbow",
+#    mode="floret",
+#    hashCount=2,
+#    bucket=50000,
+#    minn=3,
+#    maxn=6,
+# )
 
-num_iterations = 50
+f = open(filename, '+r')
+g = open("tlsh_log.txt", 'w+')
+lines = f.readlines()
+
+for line in lines:
+    sign = line.strip()
+    g.write("Current sign: " + sign + '\n')
+    for _ in range(1, 20):
+        mod_sign = rand_change(sign)
+        change_ratio = tlsh_change_per_pos(sign, mod_sign)
+        g.write(mod_sign + " Change ratio: " + str(change_ratio) + '\n')
+
+f.close()
+g.close()
