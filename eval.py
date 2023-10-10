@@ -60,11 +60,11 @@ def compute_sdhash(sign):
 def change_per_pos(sign, mod_sign, sign_hash, mod_sign_hash, delta_input_list, delta_hash_list):
     diff = distance(sign, mod_sign)
     diff_pc = (float)(diff/len(sign)) * 100
-    delta_input_list.append(diff)
+    delta_input_list.append(diff_pc)
 
     hash_diff = distance(sign_hash, mod_sign_hash)
     hash_diff_pc = (float)(hash_diff/len(sign_hash)) * 100
-    delta_hash_list.append(hash_diff)
+    delta_hash_list.append(hash_diff_pc)
 
     ratio = hash_diff_pc/diff_pc
     return ratio
@@ -164,13 +164,33 @@ def main():
 
     # Plot the deltas in a scatter plot, where Y-axis represents change (delta) in input
     # and X-axis represents delta in hash
+    # X and Y axes values
     x = np.array(delta_hash_list)
     y = np.array(delta_input_list)
-    plt.scatter(x, y)
-    plt.xlabel("Change in hash value")
-    plt.ylabel("Change in input signature")
+
+    # Scaling the axes
+    fig, ax = plt.subplots()
+    ax.axline((0, 0), slope=1)
+    ax.scatter(x, y)
+    # lims = [
+    #   np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+    #   np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+    # ]
+
+    # now plot both limits against eachother
+    # ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+    # ax.set_aspect('equal')
+    # ax.set_xlim(lims)
+    # ax.set_ylim(lims)
+
+    plt.axhline(y=10, color='r', linestyle='dashed')
+    plt.axhline(y=0, color='r', linestyle='dashed')
+    plt.axvline(x=20, color='r', linestyle='dashed')
+    plt.axvline(x=50, color='r', linestyle='dashed')
+    plt.xlabel("% Change in hash value")
+    plt.ylabel("% Change in input signature")
     plt.show()
-    # plt.savefig('scatter_tlsh_p0f1.png')
+    # fig.savefig('scatter_tlsh_p0f1.png', dpi=300)
 
 
 if __name__ == "__main__":
