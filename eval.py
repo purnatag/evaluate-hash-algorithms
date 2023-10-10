@@ -60,11 +60,11 @@ def compute_sdhash(sign):
 def change_per_pos(sign, mod_sign, sign_hash, mod_sign_hash, delta_input_list, delta_hash_list):
     diff = distance(sign, mod_sign)
     diff_pc = (float)(diff/len(sign)) * 100
-    delta_input_list.append(diff_pc)
+    delta_input_list.append(diff)
 
     hash_diff = distance(sign_hash, mod_sign_hash)
     hash_diff_pc = (float)(hash_diff/len(sign_hash)) * 100
-    delta_hash_list.append(hash_diff_pc)
+    delta_hash_list.append(hash_diff)
 
     ratio = hash_diff_pc/diff_pc
     return ratio
@@ -114,7 +114,7 @@ def rand_change(sign):
 
 # main function
 def main():
-    input_file = "..\p0f signatures\p0f1.log"
+    input_file = "..\p0f signatures\p0f2.log"
     print("Choose the hashing algorithm to run:\n ")
     print(" 1. TLSH \n 2. ssdeep \n 3. sdhash\n")
     ch = int(input("Enter choice:"))
@@ -167,8 +167,10 @@ def main():
     x = np.array(delta_hash_list)
     y = np.array(delta_input_list)
     plt.scatter(x, y)
+    plt.xlabel("Change in hash value")
+    plt.ylabel("Change in input signature")
     plt.show()
-    # plt.savefig('scatter_tlsh.png')
+    # plt.savefig('scatter_tlsh_p0f1.png')
 
 
 if __name__ == "__main__":
