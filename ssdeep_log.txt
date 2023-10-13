@@ -1,1 +1,0 @@
-Current sign: [2023/03/23 10:49:31] mod=syn|cli=192.168.0.200/50316|srv=35.241.9.150/443|subj=cli|os=Mac OS X|dist=0|params=generic fuzzy|raw_sig=4:64+0:0:1460:65535,6:mss,nop,ws,nop,nop,ts,sok,eol+1:df,ecn:0
