@@ -90,6 +90,19 @@ def compute_var_online(mean, var, num, curr):
     return var
 
 
+# Calculate collisions
+def calculate_collisions(hashdict, num_collisions, sign, sign_hash):
+    first_ascii = ord(str(sign_hash[0]).lower())
+    if first_ascii < 48 or (first_ascii > 57 and first_ascii < 97) or first_ascii > 102:
+        sign_hash = sign_hash[1:]
+    key = int(sign_hash.lower(), 16)
+    if key in hashdict.keys():
+        num_collisions += 1
+    else:
+        hashdict[key] = sign
+    return num_collisions
+
+
 # Add random characters at random positions of the string.
 # The string length at most doubles its original value
 def rand_change(sign):
@@ -169,7 +182,11 @@ def process_file(input_file, ch):
         sys.exit(0)
 
     # number of modified signatures on which gap stats have been calculated
-    num = 0
+    sign_counter = 0
+
+    # A counter and a hashmap to calculate collision rate
+    num_collisions = 0
+    hashdict = {}
 
     # initialize gap stats accumulators
     mean_gap = 0
@@ -189,27 +206,35 @@ def process_file(input_file, ch):
         output_file.write("Current sign: " + sign + '\n')
         sign_hash = compute_hash(sign, ch)
         # print(f"Processing {sign_hash}\n")
+        num_collisions = calculate_collisions(
+            hashdict, num_collisions, sign, sign_hash)
         for i in range(1, 20):
             mod_sign = rand_change(sign)
 
             # Calculating modified hash
             mod_sign_hash = compute_hash(mod_sign, ch)
 
+            # Put this hash in a hash_dict to check for collisions
+            num_collisions = calculate_collisions(
+                hashdict, num_collisions, mod_sign, mod_sign_hash)
+
             # Calculating locality, gap data
             change_ratio = change_per_pos(
                 sign, mod_sign, sign_hash, mod_sign_hash, delta_input_list, delta_hash_list)
             (mean_gap, var_gap) = calculate_gap_stats(
-                mean_gap, var_gap, num, sign_hash, mod_sign_hash)
+                mean_gap, var_gap, sign_counter, sign_hash, mod_sign_hash)
 
             # Writing computed stats to file
             output_file.write(
                 f"Modified sign no.{i}: \n Change ratio: {str(change_ratio)}, Gap stats mean: {mean_gap}, variance: {var_gap}\n")
             crlist.append(change_ratio)
-            num += 1
+            sign_counter += 1
 
+    # count the original signatures too, since gap computation is over
+    sign_counter += sign_counter/20
     # Write aggregate stats in the output log
-    output_file.write("Mean change ratio:" +
-                      str(np.mean(crlist)) + "\n")
+    output_file.write("Mean change ratio: " +
+                      str(np.mean(crlist)) + " Collision Rate: " + str(num_collisions/sign_counter)+"\n")
     output_file.write("Input distribution mean: " + str(np.mean(delta_input_list)
                                                         ) + " variance: " + str(np.var(delta_input_list)) + "\n")
     output_file.write("Output distribution mean: " + str(np.mean(delta_hash_list)
