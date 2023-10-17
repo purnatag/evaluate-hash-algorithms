@@ -145,7 +145,7 @@ def get_plots(fname, crlist, delta_input_list, delta_hash_list, hash_alg):
         ax.axvline(x=20, color='r', linestyle='dashed')
         ax.axvline(x=50, color='r', linestyle='dashed')
 
-    fig.savefig("scatter_{ha}_{fn}.png".format(ha=hash_alg, fn=fname), dpi=600)
+    fig.savefig("scatter_{ha}_{fn}.png".format(ha=hash_alg, fn=fname), dpi=100)
     plt.show()
 
     return
@@ -188,7 +188,7 @@ def process_file(input_file, ch):
         sign = line.strip()
         output_file.write("Current sign: " + sign + '\n')
         sign_hash = compute_hash(sign, ch)
-        print(f"Processing {sign_hash}\n")
+        # print(f"Processing {sign_hash}\n")
         for i in range(1, 20):
             mod_sign = rand_change(sign)
 
