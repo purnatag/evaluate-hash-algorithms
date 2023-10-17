@@ -1,7 +1,7 @@
-# Evaluation Pipeline for TLSH (and other hashing schemes)
+# Evaluation Pipeline for TLSH, simhash
 ---
 
-This repository contains the file `eval.py`, used to evaluate the quality of compression exhibited by the hashing schemes `tlsh`, `ssdeep` and `sdhash` on system event signature logs.
+This repository contains the file `eval.py`, used to evaluate the quality of compression exhibited by the hashing schemes `tlsh` and `simhash` on system event signature logs.
 The metrics for evaluation are --
 - Computation of locality or change ratio which is %change in hash/%change in the input signature.
 - Mean gaps between the changes in the hash value, and variance
