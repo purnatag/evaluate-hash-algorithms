@@ -13,46 +13,16 @@ import matplotlib.pyplot as plt
 
 
 # Choose required hash function and compute hash
+# 'ch' keeps alive the possibility of adding more algorithms to this pipeline
 def compute_hash(sign, ch):
     if ch == 1:
         sign_hash = compute_tlsh(sign)
-    elif ch == 2:
-        sign_hash = compute_ssdeep(sign)
-    else:
-        sign_hash = compute_sdhash(sign)
     return sign_hash
 
 
 # Compute hash when the chosen function is tlsh
 def compute_tlsh(sign):
     return tlsh.hash(bytes(sign, 'utf8'))
-
-
-# Compute hash when the chosen function is ssdeep
-def compute_ssdeep(sign):
-    f = open('single_sign.txt', 'w')
-    f.write(sign)
-    stdout = subprocess.run(
-        ['..\ssdeep-2.14.1\ssdeep', '-l', 'single_sign.txt', '>', 'ssdeep_output'], check=True)
-    ssdeep_result = (((open('ssdeep_output', 'r')).read()).splitlines())
-    result = ssdeep_result[4].split(',')[0]
-    print(stdout)
-
-    f.close()
-    # os.remove('output')
-    os.remove('single_sign.txt')
-    return result
-
-
-# Compute hash when the chosen function is sdhash
-def compute_sdhash(sign):
-    f = open('single_sign.txt', 'w')
-    f.write(sign)
-    sdhash_result = subprocess.run(
-        ['..\sdhash-3.4-win32\sdhash', 'single_sign.txt'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    f.close()
-    os.remove('single_sign.txt')
-    return sdhash_result
 
 
 # Calculate locality as change in the hash of the randomly modified signature per
@@ -175,10 +145,7 @@ def process_file(input_file, ch=1):
     # Getting the right output file
     if ch == 1:
         output_file = open("tlsh_log.txt", 'w+')
-    elif ch == 2:
-        output_file = open("ssdeep_log.txt", 'w+')
-    elif ch == 3:
-        output_file = open("sdhash_log.txt", 'w+')
+    # Currently dead code
     else:
         print("Invalid input. Exiting.\n")
         sys.exit(0)
