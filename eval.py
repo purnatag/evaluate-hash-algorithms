@@ -2,14 +2,16 @@ import tlsh
 import random
 import subprocess
 import os
+import re
 import sys
+from simhash import Simhash
 from string import ascii_letters, digits
 from Levenshtein import distance
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Program computes locality of chosen hash function on p0f signature log file
-# Currently supporting only TLSH
+# Currently supporting TLSH and simhash
 
 
 # Choose required hash function and compute hash
@@ -17,12 +19,25 @@ import matplotlib.pyplot as plt
 def compute_hash(sign, ch):
     if ch == 1:
         sign_hash = compute_tlsh(sign)
+    elif ch == 2:
+        sign_hash = compute_simhash(sign)
     return sign_hash
 
 
 # Compute hash when the chosen function is tlsh
 def compute_tlsh(sign):
     return tlsh.hash(bytes(sign, 'utf8'))
+
+
+# Compute hash when the chosen function is simhash
+def compute_simhash(sign):
+    width = 3
+    sign = sign.lower()
+    sign = re.sub(r'[^\w]+', '', sign)
+    sign_features = [sign[i:i + width]
+                     for i in range(max(len(sign) - width + 1, 1))]
+    hash_str = str('%x' % Simhash(sign_features).value)
+    return hash_str
 
 
 # Calculate locality as change in the hash of the randomly modified signature per
@@ -57,6 +72,8 @@ def calculate_gap_stats(mean_gap, var_gap, num, sign_hash, mod_sign_hash):
         else:
             i += 1
         j += 1
+    if gap_num == 0:
+        return (mean_gap, var_gap)
     curr_mean = (float)(gap_sum/gap_num)
     mean_gap += (curr_mean - mean_gap)/(num + 1)
     var_gap = compute_var_online(mean_gap, var_gap, num, curr_mean)
@@ -88,7 +105,7 @@ def rand_change(sign):
 
 # Plotting the deltas in a scatter plot, where Y-axis represents change (delta) in input
 # and X-axis represents delta in hash. Plotting the change ratio in the same plot
-def get_plots(fname, crlist, delta_input_list, delta_hash_list):
+def get_plots(fname, crlist, delta_input_list, delta_hash_list, hash_alg):
     print("Plotting the data...")
     # X and Y axes values
     x1 = np.array(crlist)
@@ -128,15 +145,15 @@ def get_plots(fname, crlist, delta_input_list, delta_hash_list):
         ax.axvline(x=20, color='r', linestyle='dashed')
         ax.axvline(x=50, color='r', linestyle='dashed')
 
-    fig.savefig("scatter_tlsh_{}.png".format(fname), dpi=600)
+    fig.savefig("scatter_{ha}_{fn}.png".format(ha=hash_alg, fn=fname), dpi=600)
     plt.show()
 
     return
 
 
 # Function to create an output log for the selected hashing scheme
-def process_file(input_file, ch=1):
-    input_file_path = ".\p0f signatures\{}".format(input_file)
+def process_file(input_file, ch):
+    input_file_path = ".\p0f signatures\{}.log".format(input_file)
     # Read signatures from the input file
     f = open(input_file_path, '+r')
     lines = f.readlines()
@@ -145,7 +162,8 @@ def process_file(input_file, ch=1):
     # Getting the right output file
     if ch == 1:
         output_file = open("tlsh_log.txt", 'w+')
-    # Currently dead code
+    elif ch == 2:
+        output_file = open("simhash_log.txt", 'w+')
     else:
         print("Invalid input. Exiting.\n")
         sys.exit(0)
@@ -170,6 +188,7 @@ def process_file(input_file, ch=1):
         sign = line.strip()
         output_file.write("Current sign: " + sign + '\n')
         sign_hash = compute_hash(sign, ch)
+        print(f"Processing {sign_hash}\n")
         for i in range(1, 20):
             mod_sign = rand_change(sign)
 
@@ -199,7 +218,7 @@ def process_file(input_file, ch=1):
     output_file.close()
 
     # Plot the data
-    get_plots(input_file, crlist, delta_input_list, delta_hash_list)
+    get_plots(input_file, crlist, delta_input_list, delta_hash_list, ch)
     return
 
 
@@ -208,11 +227,11 @@ def main():
     # Get the name of the p0f signature file from command line
     filename = sys.argv[1]
 
-    # print("Choose the hashing algorithm to run:\n ")
-    # print(" 1. TLSH \n 2. ssdeep \n 3. sdhash\n")
-    # ch = int(input("Enter choice:"))
+    print("Choose the hashing algorithm to run:\n ")
+    print(" 1. TLSH \n 2. simhash\n")
+    ch = int(input("Enter choice:"))
 
-    process_file(filename, 1)
+    process_file(filename, ch)
     return
 
 
